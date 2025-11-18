@@ -1,0 +1,40 @@
+name: Pull Dev Branch on Server
+
+on:
+  push:
+    branches:
+      - main  # This workflow runs on pushes to the 'dev' branch
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: SSH into server and pull changes
+      uses: appleboy/ssh-action@master
+      with:
+        host: ${{ secrets.SSH_HOST }}
+        username: ${{ secrets.SSH_USERNAME }}
+        key: ${{ secrets.SSH_PRIVATE_KEY }}
+        port: ${{ secrets.SSH_PORT || 22 }}
+        script: |
+       
+          cd /home/ubuntu/legal-watch-dog-FEE
+
+          # Ensure you are on the correct branch
+          git checkout main
+
+          # Pull the latest changes from the dev branch
+          git pull origin main
+
+          # --- Frontend Build Steps ---
+          echo "Installing dependencies..."
+          npm install
+
+          echo "Building the application..."
+          npm run build
+
+          echo "Restarting application server..."
+          # IMPORTANT: Replace 'your-app-name' with the actual name of your PM2 process
+          # You might need to install pm2 globally on your server: npm install -g pm2
+          pm2 restart your-app-name
